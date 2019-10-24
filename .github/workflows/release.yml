@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  repository_dispatch:
+  pull_request:
+    types: [closed]
+
+jobs:
+  build:
+    if: (github.event_name == 'repository_dispatch' && github.event.action == 'release') ||
+        (github.head_ref == 'autoupdate' && github.base_ref == 'master' && github.event.pull_request.merged == true)
+    strategy:
+      matrix:
+        os: [macOS-10.14, windows-2019]
+    runs-on: ${{ matrix.os }}
+    steps:
+
+    - uses: actions/checkout@v1
+
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+
+    - name: Setup scripts
+      run: |
+        curl https://raw.githubusercontent.com/FriendsOfGalaxy/galaxy-integrations-updater/master/scripts.py --output ../scripts.py
+        python -m pip install PyGithub==1.43
+        python -m pip install pip>19.2  # due to pip-compile bug
+        python -m pip install pip-tools
+
+    - name: Build
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: python ../scripts.py build --dir ../build/${{ matrix.os }}
+
+    - uses: actions/upload-artifact@master
+      with:
+        name: build_${{ matrix.os }}
+        path: ../build/${{ matrix.os }}
+
+  deploy:
+    if: (github.event_name == 'repository_dispatch' && github.event.action == 'release') ||
+        (github.head_ref == 'autoupdate' && github.base_ref == 'master' && github.event.pull_request.merged == true)
+    runs-on: ubuntu-18.04
+    needs: build
+    steps:
+
+    - uses: actions/checkout@v1
+      with:
+        ref: master
+
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+
+    - name: Install hub
+      uses: geertvdc/setup-hub@master
+
+    - name: Setup scripts
+      run: |
+        curl https://raw.githubusercontent.com/FriendsOfGalaxy/galaxy-integrations-updater/master/scripts.py --output ../scripts.py
+        python -m pip install PyGithub==1.43
+
+    - name: download Windows build
+      uses: actions/download-artifact@master
+      with:
+        name: build_windows-2019
+        path: ../build/
+
+    - name: download macOS build
+      uses: actions/download-artifact@master
+      with:
+        name: build_macOS-10.14
+        path: ../build/
+
+    - name: Release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        REPOSITORY: ${{ github.repository }}
+      run: python ../scripts.py release --dir ../build/
+
+    - name: Update Release File
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        REPOSITORY: ${{ github.repository }}
+      run: python ../scripts.py update_release_file

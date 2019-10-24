@@ -1,0 +1,43 @@
+name: Pre-review validation
+
+on:
+  repository_dispatch:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches:
+      - autoupdate
+
+jobs:
+  build:
+    if: (github.event_name == 'pull_request') || (github.event_name == 'repository_dispatch' && github.event.action == 'validation')
+    strategy:
+      matrix:
+        os: [macOS-10.14, windows-2019]
+    runs-on: ${{ matrix.os }}
+    steps:
+
+    - uses: actions/checkout@v1
+
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+
+    - name: Setup scripts and tests
+      run: |
+        curl https://raw.githubusercontent.com/FriendsOfGalaxy/galaxy-integrations-updater/master/scripts.py --output ../scripts.py
+        curl https://raw.githubusercontent.com/FriendsOfGalaxy/galaxy-integrations-updater/master/tests.py --output ../tests.py
+        python -m pip install PyGithub==1.43
+        python -m pip install pip>19.2  # due to pip-compile bug
+        python -m pip install pip-tools
+        python -m pip install pytest
+
+    - name: Build
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: python ../scripts.py build --dir ../build/${{ matrix.os }}
+
+    - name: Tests
+      env:
+        TARGET: ../build/${{ matrix.os }}
+      run: pytest ../tests.py

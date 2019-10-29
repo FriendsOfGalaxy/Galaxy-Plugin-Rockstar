@@ -39,6 +39,11 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: python ../scripts.py build --dir ../build/${{ matrix.os }}
 
+    - uses: actions/upload-artifact@master
+      with:
+        name: build_${{ matrix.os }}
+        path: ../build/${{ matrix.os }}
+
     - name: Tests
       env:
         TARGET: ../build/${{ matrix.os }}

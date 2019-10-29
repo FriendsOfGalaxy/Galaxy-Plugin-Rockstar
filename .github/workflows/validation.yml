@@ -17,6 +17,8 @@ jobs:
     steps:
 
     - uses: actions/checkout@v1
+      with:
+        ref: autoupdate
 
     - name: Set up Python 3.7
       uses: actions/setup-python@v1
@@ -27,8 +29,8 @@ jobs:
       run: |
         curl https://raw.githubusercontent.com/FriendsOfGalaxy/galaxy-integrations-updater/master/scripts.py --output ../scripts.py
         curl https://raw.githubusercontent.com/FriendsOfGalaxy/galaxy-integrations-updater/master/tests.py --output ../tests.py
+        python -m pip install -U pip  # due to pip-compile bug
         python -m pip install PyGithub==1.43
-        python -m pip install pip>19.2  # due to pip-compile bug
         python -m pip install pip-tools
         python -m pip install pytest
 

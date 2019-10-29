@@ -54,6 +54,8 @@ class AuthenticatedHttpClient(HttpClient):
         self._debug_always_refresh = False  # Set this to True if you are debugging ScAuthTokenData refreshing.
         self._store_credentials = store_credentials
         self.bearer = None
+        # The refresh token here is the RMT cookie. The other refresh token is the rsso cookie. The RMT cookie is blank
+        # for users not using two-factor authentication.
         self.refresh_token = Token()
         self._fingerprint = None
         self.user = None
@@ -184,7 +186,7 @@ class AuthenticatedHttpClient(HttpClient):
     async def _get_user_json(self, message=None):
         try:
             old_auth = self._current_session.cookies['ScAuthTokenData']
-            log.debug("ROCKSTAR_OLD_AUTH: " + str(old_auth))
+            log.debug(f"ROCKSTAR_OLD_AUTH: {str(old_auth)[:5]}***{str(old_auth[-3:])}")
             headers = {
                 "accept": "application/json, text/plain, */*",
                 "connection": "keep-alive",
@@ -196,7 +198,7 @@ class AuthenticatedHttpClient(HttpClient):
             resp = self._current_session.get(r"https://www.rockstargames.com/auth/get-user.json", headers=headers,
                                              allow_redirects=False, timeout=5)
             new_auth = self._current_session.cookies['ScAuthTokenData']
-            log.debug("ROCKSTAR_NEW_AUTH: " + str(new_auth))
+            log.debug(f"ROCKSTAR_NEW_AUTH {str(new_auth)[:5]}***{str(new_auth[-3:])}")
             self._current_auth_token = new_auth
             if new_auth != old_auth:
                 log.warning("ROCKSTAR_AUTH_CHANGE: The ScAuthTokenData value has changed!")
@@ -269,7 +271,12 @@ class AuthenticatedHttpClient(HttpClient):
             refresh_code = refresh_resp.text
             log.debug("ROCKSTAR_REFRESH_CODE: Got code " + refresh_code + "!")
             # We need to set the new refresh token here, if it is updated.
-            self.set_refresh_token(self._current_session.cookies['RMT'])
+            if "RMT" in self._current_session.cookies:
+                self.set_refresh_token(self._current_session.cookies['RMT'])
+            else:
+                log.debug("ROCKSTAR_RMT_MISSING: The RMT cookie is missing, presumably because the user has not enabled"
+                          " two-factor authentication. Proceeding anyways...")
+                self.set_refresh_token('')
             # The Social Club API will not grant the user a new ScAuthTokenData token if they already have one that is
             # relevant, so when refreshing the credentials, the old token is deleted here.
             old_auth = self._current_session.cookies['ScAuthTokenData']
@@ -286,9 +293,9 @@ class AuthenticatedHttpClient(HttpClient):
                 "User-Agent": USER_AGENT
             }
             data = {"code": refresh_code}
-            log.debug("ROCKSTAR_CODE: " + data['code'])
+            # log.debug("ROCKSTAR_CODE: " + data['code'])
             final_request = self._current_session.post(url, json=data, headers=headers, timeout=5)
-            log.debug("ROCKSTAR_SENT_CODE: " + str(final_request.request.body))
+            # log.debug("ROCKSTAR_SENT_CODE: " + str(final_request.request.body))
             final_json = final_request.json()
             log.debug("ROCKSTAR_REFRESH_JSON: " + str(final_json))
             new_auth = self._current_session.cookies['ScAuthTokenData']

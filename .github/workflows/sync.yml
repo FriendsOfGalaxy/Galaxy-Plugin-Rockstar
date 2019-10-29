@@ -1,0 +1,44 @@
+name: Synchronization
+
+on:
+  repository_dispatch:
+  schedule:
+    - cron:  '0 */12 * * *'
+
+jobs:
+  sync:
+    if: (github.event_name == 'repository_dispatch' && github.event.action == 'sync') ||
+        (github.event_name == 'schedule')
+    runs-on: ubuntu-18.04
+    steps:
+
+    - uses: actions/checkout@v1
+
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+
+    - name: Install hub
+      uses: geertvdc/setup-hub@v1.0.0
+
+    - name: Download scripts
+      run: |
+        curl https://raw.githubusercontent.com/FriendsOfGalaxy/galaxy-integrations-updater/master/scripts.py --output ../scripts.py
+        python -m pip install PyGithub==1.43
+
+    - name: Check and sync to PR
+      env:
+        GITHUB_TOKEN: ${{ secrets.PTOKEN }}
+      run: python ../scripts.py sync
+
+    # Temporal workaround for not working pull_request on forks
+    # https://github.community/t5/GitHub-Actions/Github-Workflow-not-running-from-pull-request-from-forked/m-p/33484/highlight/true#M1524
+    - name: Trigger validation event
+      env:
+        GITHUB_TOKEN: ${{ secrets.PTOKEN }}
+      run: |
+        hub api -t -X POST -H "Authorization:token $GITHUB_TOKEN" \
+        -H "Accept:application/vnd.github.everest-preview+json,application/vnd.github.v3+json" \
+        https://api.github.com/repos/${{ github.repository }}/dispatches \
+        -F event_type=validation

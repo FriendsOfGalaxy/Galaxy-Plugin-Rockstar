@@ -68,13 +68,13 @@ jobs:
       uses: actions/download-artifact@master
       with:
         name: build_windows-2019
-        path: ../build/
+        path: ../build/windows
 
     - name: download macOS build
       uses: actions/download-artifact@master
       with:
         name: build_macOS-10.14
-        path: ../build/
+        path: ../build/macos
 
     - name: Release
       env:

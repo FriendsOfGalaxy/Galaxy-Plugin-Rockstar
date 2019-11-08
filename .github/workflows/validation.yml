@@ -35,6 +35,7 @@ jobs:
       run: |
         curl https://raw.githubusercontent.com/FriendsOfGalaxy/galaxy-integrations-updater/master/scripts.py --output ../scripts.py
         curl https://raw.githubusercontent.com/FriendsOfGalaxy/galaxy-integrations-updater/master/tests.py --output ../tests.py
+        python -m pip install wheel
         python -m pip install -U pip
         python -m pip install PyGithub==1.43
         python -m pip install pip-tools

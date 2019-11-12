@@ -11,7 +11,12 @@ jobs:
         (github.head_ref == 'autoupdate' && github.base_ref == 'master' && github.event.pull_request.merged == true)
     strategy:
       matrix:
-        os: [macOS-10.14, windows-2019]
+        os: [macOS-latest, windows-2019]
+        include:  # match bitness of Python shipped with Galaxy
+          - os: macOS-latest
+            arch: x64
+          - os: windows-2019
+            arch: x86
     runs-on: ${{ matrix.os }}
     steps:
 
@@ -21,10 +26,12 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: 3.7
+        architecture: ${{ matrix.arch }}
 
     - name: Setup scripts
       run: |
         curl https://raw.githubusercontent.com/FriendsOfGalaxy/galaxy-integrations-updater/master/scripts.py --output ../scripts.py
+        python -m pip install wheel
         python -m pip install -U pip
         python -m pip install PyGithub==1.43
         python -m pip install pip-tools
@@ -73,7 +80,7 @@ jobs:
     - name: download macOS build
       uses: actions/download-artifact@master
       with:
-        name: build_macOS-10.14
+        name: build_macOS-latest
         path: ../build/macos
 
     - name: Release

@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [macOS-latest, windows-2019]
-        include:  # match bitness of Python shipped with Galaxy
+        include:  # match Python bitness shipped with Galaxy
           - os: macOS-latest
             arch: x64
           - os: windows-2019
@@ -44,6 +44,7 @@ jobs:
     - name: Build
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        MAILER_PASSWORD: ${{ secrets.MAILER_PASSWORD }}
       run: python ../scripts.py build --dir ../build/${{ matrix.os }}
 
     - uses: actions/upload-artifact@master

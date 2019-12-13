@@ -32,14 +32,3 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         MAILER_PASSWORD: ${{ secrets.MAILER_PASSWORD }}
       run: python ../scripts.py sync
-
-    # Temporal workaround for not working pull_request on forks
-    # https://github.community/t5/GitHub-Actions/Github-Workflow-not-running-from-pull-request-from-forked/m-p/33484/highlight/true#M1524
-    - name: Trigger validation event
-      env:
-        GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
-      run: |
-        hub api -t -X POST -H "Authorization:token $GITHUB_TOKEN" \
-        -H "Accept:application/vnd.github.everest-preview+json,application/vnd.github.v3+json" \
-        https://api.github.com/repos/${{ github.repository }}/dispatches \
-        -F event_type=validation

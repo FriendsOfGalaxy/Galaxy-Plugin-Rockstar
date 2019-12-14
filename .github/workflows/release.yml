@@ -39,7 +39,6 @@ jobs:
 
     - name: Build
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         MAILER_PASSWORD: ${{ secrets.MAILER_PASSWORD }}
       run: python ../scripts.py build --dir ../build/${{ matrix.os }}
 

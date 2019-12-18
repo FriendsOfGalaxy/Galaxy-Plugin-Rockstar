@@ -18,7 +18,7 @@ import sys
 import webbrowser
 
 from consts import AUTH_PARAMS, NoGamesInLogException, NoLogFoundException, IS_WINDOWS, LOG_SENSITIVE_DATA, \
-    ARE_ACHIEVEMENTS_IMPLEMENTED, CONFIG_OPTIONS
+    ARE_ACHIEVEMENTS_IMPLEMENTED, CONFIG_OPTIONS, get_unix_epoch_time_from_date
 from game_cache import games_cache, get_game_title_id_from_ros_title_id, get_achievement_id_from_ros_title_id
 from http_client import BackendClient
 from version import __version__
@@ -157,7 +157,8 @@ class RockstarPlugin(Plugin):
                 raise InvalidCredentials
 
     async def pass_login_credentials(self, step, credentials, cookies):
-        log.debug("ROCKSTAR_COOKIE_LIST: " + str(cookies))
+        if LOG_SENSITIVE_DATA:
+            log.debug("ROCKSTAR_COOKIE_LIST: " + str(cookies))
         for cookie in cookies:
             if cookie['name'] == "ScAuthTokenData":
                 self._http_client.set_current_auth_token(cookie['value'])
@@ -262,7 +263,7 @@ class RockstarPlugin(Plugin):
                     await self.update_achievements_cache(achievement_id)
                     all_achievements = self._all_achievements_cache[str("achievements_" + achievement_id)]
                 achievement_num = key
-                unlock_time = await self.get_unix_epoch_time_from_date(value["dateAchieved"])
+                unlock_time = await get_unix_epoch_time_from_date(value["dateAchieved"])
                 achievement_name = all_achievements[int(key) - 1]["name"]
                 achievements_list.append(Achievement(unlock_time, achievement_num, achievement_name))
             return achievements_list
@@ -277,15 +278,7 @@ class RockstarPlugin(Plugin):
             log.debug("ROCKSTAR_NEW_CACHE: " + self.persistent_cache[str("achievements_" + achievement_id)])
             self.push_cache()
 
-    @staticmethod
-    async def get_unix_epoch_time_from_date(date):
-        year = int(date[0:4])
-        month = int(date[5:7])
-        day = int(date[8:10])
-        hour = int(date[11:13])
-        minute = int(date[14:16])
-        second = int(date[17:19])
-        return int(datetime.datetime(year, month, day, hour, minute, second).timestamp())
+
 
     async def get_friends(self) -> List[UserInfo]:
         # The Social Club website returns a list of the current user's friends through the url
@@ -712,7 +705,6 @@ class RockstarPlugin(Plugin):
             title_id = get_game_title_id_from_ros_title_id(game_id)
             log.debug("ROCKSTAR_UNINSTALL_REQUEST: Requesting to uninstall " + title_id + "...")
             self._local_client.uninstall_game_from_title_id(title_id)
-            self.update_local_game_status(LocalGame(game_id, LocalGameState.None_))
 
     def create_game_from_title_id(self, title_id):
         return Game(str(self.games_cache[title_id]["rosTitleId"]), self.games_cache[title_id]["friendlyName"], None,

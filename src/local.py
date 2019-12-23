@@ -54,8 +54,9 @@ class LocalClient:
 
     async def game_pid_from_tasklist(self, title_id) -> str:
         pid = None
+        tracked_key = "trackEXE" if "trackEXE" in games_cache[title_id] else "launchEXE"
         find_actual_pid = subprocess.Popen(
-            f'tasklist /FI "IMAGENAME eq {games_cache[title_id]["launchEXE"]} " /FI "STATUS eq running" /FO LIST',
+            f'tasklist /FI "IMAGENAME eq {games_cache[title_id][tracked_key]} " /FI "STATUS eq running" /FO LIST',
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output, err = find_actual_pid.communicate()
 
@@ -67,7 +68,7 @@ class LocalClient:
 
     async def launch_game_from_title_id(self, title_id):
         path = self.get_path_to_game(title_id)
-        path = path.replace('"', '')  # path = path[:path.rindex('"')] if '"' in path else path
+        path = path.replace('"', '').replace(',0', '')
         if not path:
             log.error(f"ROCKSTAR_LAUNCH_FAILURE: The game {title_id} could not be launched.")
             return

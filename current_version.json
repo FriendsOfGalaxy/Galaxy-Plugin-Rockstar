@@ -1,12 +1,12 @@
 {
-    "tag_name": "0.5",
+    "tag_name": "0.5.1",
     "assets": [
         {
-            "browser_download_url": "https://github.com/FriendsOfGalaxy/galaxy-integration-rockstar/releases/download/0.5/macos.zip",
+            "browser_download_url": "https://github.com/FriendsOfGalaxy/galaxy-integration-rockstar/releases/download/0.5.1/macos.zip",
             "name": "macos.zip"
         },
         {
-            "browser_download_url": "https://github.com/FriendsOfGalaxy/galaxy-integration-rockstar/releases/download/0.5/windows.zip",
+            "browser_download_url": "https://github.com/FriendsOfGalaxy/galaxy-integration-rockstar/releases/download/0.5.1/windows.zip",
             "name": "windows.zip"
         }
     ]

@@ -40,12 +40,12 @@ jobs:
     - name: Build
       env:
         MAILER_PASSWORD: ${{ secrets.MAILER_PASSWORD }}
-      run: python ../scripts.py build --dir ../build/${{ matrix.os }}
+      run: python ../scripts.py build --dir ~/build/${{ matrix.os }}
 
-    - uses: actions/upload-artifact@master
+    - uses: actions/upload-artifact@v2
       with:
         name: build_${{ matrix.os }}
-        path: ../build/${{ matrix.os }}
+        path: ~/build/${{ matrix.os }}
 
   deploy:
     if: (github.event_name == 'repository_dispatch' && github.event.action == 'release') ||
@@ -72,23 +72,23 @@ jobs:
         python -m pip install PyGithub==1.43
 
     - name: download Windows build
-      uses: actions/download-artifact@master
+      uses: actions/download-artifact@v2
       with:
         name: build_windows-2019
-        path: ../build/windows
+        path: build/windows
 
     - name: download macOS build
-      uses: actions/download-artifact@master
+      uses: actions/download-artifact@v2
       with:
         name: build_macOS-latest
-        path: ../build/macos
+        path: build/macos
 
     - name: Release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         REPOSITORY: ${{ github.repository }}
         MAILER_PASSWORD: ${{ secrets.MAILER_PASSWORD }}
-      run: python ../scripts.py release --dir ../build/
+      run: python ../scripts.py release --dir build/
 
     - name: Update Release File
       env:

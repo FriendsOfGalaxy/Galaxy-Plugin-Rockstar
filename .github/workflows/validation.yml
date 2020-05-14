@@ -44,14 +44,14 @@ jobs:
     - name: Build
       env:
         MAILER_PASSWORD: ${{ secrets.MAILER_PASSWORD }}
-      run: python ../scripts.py build --dir ../build/${{ matrix.os }}
+      run: python ../scripts.py build --dir ~/build/${{ matrix.os }}
 
-    - uses: actions/upload-artifact@master
+    - uses: actions/upload-artifact@v2
       with:
         name: build_${{ matrix.os }}
-        path: ../build/${{ matrix.os }}
+        path: ~/build/${{ matrix.os }}
 
     - name: Tests
       env:
-        TARGET: ../build/${{ matrix.os }}
+        TARGET: ~/build/${{ matrix.os }}
       run: pytest ../tests.py

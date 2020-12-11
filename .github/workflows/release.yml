@@ -33,7 +33,7 @@ jobs:
         curl https://raw.githubusercontent.com/FriendsOfGalaxy/galaxy-integrations-updater/master/scripts.py --output ../scripts.py
         python -m pip install wheel
         python -m pip install -U pip
-        python -m pip install PyGithub==1.43
+        python -m pip install PyGithub==1.54
         python -m pip install pip-tools
         python -m pip install pytest
 
@@ -63,13 +63,10 @@ jobs:
       with:
         python-version: 3.7
 
-    - name: Install hub
-      uses: geertvdc/setup-hub@master
-
     - name: Setup scripts
       run: |
         curl https://raw.githubusercontent.com/FriendsOfGalaxy/galaxy-integrations-updater/master/scripts.py --output ../scripts.py
-        python -m pip install PyGithub==1.43
+        python -m pip install PyGithub==1.54
 
     - name: download Windows build
       uses: actions/download-artifact@v2
